@@ -1,0 +1,11 @@
+org\example\onlinelearningsite\HelloResource.class
+org\example\onlinelearningsite\Entity\User.class
+org\example\onlinelearningsite\Entity\Enrollment.class
+org\example\onlinelearningsite\Entity\Course.class
+org\example\onlinelearningsite\controller\course\CourseResource.class
+org\example\onlinelearningsite\controller\Enrollment\EnrollmentResource.class
+org\example\onlinelearningsite\Entity\UserRole.class
+org\example\onlinelearningsite\Entity\CourseReview.class
+org\example\onlinelearningsite\controller\Enrollment\EnrollmentController.class
+org\example\onlinelearningsite\HelloApplication.class
+org\example\onlinelearningsite\controller\course\CourseController.class
