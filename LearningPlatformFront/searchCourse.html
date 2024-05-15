@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Search Courses</title>
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #f4f4f4;
+  }
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+  h1, h2 {
+    text-align: center;
+  }
+  .course {
+    margin-bottom: 20px;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+  .course h3 {
+    margin-top: 0;
+  }
+  .search-container {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  input[type="text"] {
+    padding: 8px;
+    margin: 0 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+  }
+  select {
+    padding: 8px;
+    margin: 0 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+  <h1>Search for Course</h1>
+  <div class="search-container">
+    <!-- Dynamic placeholder based on selected criteria -->
+    <input id="searchInput" type="text" placeholder="Search...">
+    <!-- Selector for search criteria -->
+    <select id="searchCriteria" onchange="updatePlaceholder()">
+      <option value="name">Name</option>
+      <option value="category">Category</option>
+      <option value="rating">Rating</option>
+    </select>
+    <!-- Button for search -->
+    <button onclick="searchCourses()">Search</button>
+  </div>
+
+  <div id="coursesContainer">
+    <!-- Courses will be dynamically added here -->
+  </div>
+
+  <script>
+    function updatePlaceholder() {
+      var searchCriteria = document.getElementById("searchCriteria").value;
+      var placeholderText = "Search by " + searchCriteria + "...";
+      document.getElementById("searchInput").placeholder = placeholderText;
+    }
+
+    function searchCourses() {
+      var searchTerm = document.getElementById("searchInput").value;
+      var searchCriteria = document.getElementById("searchCriteria").value;
+      var searchRating = "";
+
+      // If the search criteria is "rating", get the value from the rating input field
+      if (searchCriteria === "rating") {
+        searchRating = document.getElementById("searchInputRating").value;
+      }
+
+      // Constructing the URL with query parameters
+      var url = "http://localhost:8080/onlineLearningSite-1.0-SNAPSHOT/api/courses/search?searchTerm=" + searchTerm + "&searchCriteria=" + searchCriteria + "&searchRating=" + searchRating;
+
+      // Fetching data from the server
+      fetch(url)
+        .then(response => {
+          // Checking if the response is successful (status code 200)
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json(); // Parse the response body as JSON
+        })
+        .then(data => {
+          // Once data is received, call displayCourses to render the courses
+          displayCourses(data);
+        })
+        .catch(error => {
+          // Handle errors
+          console.error('Error fetching courses:', error);
+        });
+    }
+
+    function displayCourses(courses) {
+      var container = document.getElementById("coursesContainer");
+      container.innerHTML = ""; // Clear previous courses
+
+      courses.forEach(function(course) {
+        var courseElement = document.createElement("div");
+        courseElement.classList.add("course");
+
+        var title = document.createElement("h3");
+        title.textContent = course.name;
+        courseElement.appendChild(title);
+
+        var description = document.createElement("p");
+        description.textContent = "Description: " + course.description;
+        courseElement.appendChild(description);
+
+        var instructorEmail = document.createElement("p");
+        instructorEmail.textContent = "Instructor Email: " + course.instructorEmail;
+        courseElement.appendChild(instructorEmail);
+
+        var ratings = document.createElement("p");
+        ratings.textContent = "Ratings: " + course.rating;
+        courseElement.appendChild(ratings);
+
+        var enrolledStudents = document.createElement("p");
+        enrolledStudents.textContent = "Enrolled Students: " + course.enrolledStudents;
+        courseElement.appendChild(enrolledStudents);
+
+        var duration = document.createElement("p");
+        duration.textContent = "Course Duration: " + course.duration;
+        courseElement.appendChild(duration);
+
+        container.appendChild(courseElement);
+      });
+    }
+  </script>
+</body>
+</html>

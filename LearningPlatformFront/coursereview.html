@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Course Review</title>
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+  }
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  h1, h2 {
+    text-align: center;
+  }
+  .course-content {
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+  }
+  .review-button {
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    display: block;
+    margin: 20px auto;
+  }
+  .review-button:hover {
+    background-color: #0056b3;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Course Review</h1>
+
+  <h3>Course Review and Rating</h3>
+  <!-- Review and Rating Form -->
+  <form id="reviewForm">
+    <div class="form-group">
+      <label for="name">Write Course Name:</label>
+      <input type="text" class="form-control" id="name" placeholder="Enter course name">
+    </div>
+    <div class="form-group">
+      <label for="userEmail">Write Your Email:</label>
+      <input type="text" class="form-control" id="userEmail" placeholder="Enter Your email">
+    </div>
+    <div class="form-group">
+      <label for="review">Write your review:</label>
+      <textarea class="form-control" id="review" rows="3"></textarea>
+    </div>
+    <div class="form-group">
+      <label for="rating">Rate the course:</label>
+      <select class="form-control" id="rating">
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+      </select>
+    </div>
+    <button type="button" class="btn btn-primary" id="submitReviewBtn">Submit Review</button>
+  </form>
+</div>
+
+<div class="container">
+  <div class="course-content">
+    <h2>Course Title</h2>
+    <p>Description: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam eget lectus nec sapien tincidunt placerat. Fusce ac orci et elit varius hendrerit eget sed velit.</p>
+    <p>Content: This is where the course content would be displayed. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam eget lectus nec sapien tincidunt placerat. Fusce ac orci et elit varius hendrerit eget sed velit.</p>
+    <p>Instructor: John Doe</p>
+    <p>Duration: 10 weeks</p>
+  </div>
+
+  <button class="review-button">Review Course</button>
+</div>
+
+<script>
+ document.getElementById('submitReviewBtn').addEventListener('click', function() {
+    // Get review, rating, and course name values
+    var review = document.getElementById('review').value;
+    var rating = document.getElementById('rating').value;
+    var name = document.getElementById('name').value;
+    var userEmail = document.getElementById('userEmail').value;
+
+    var requestBody = JSON.stringify({
+  course: {
+    name: name
+  },
+  userEmail: userEmail,
+  rating: rating,
+  review: review
+});
+
+    // Make a POST request to the backend create review endpoint
+    fetch('http://localhost:8080/onlineLearningSite-1.0-SNAPSHOT/api/reviews/create', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: requestBody
+    })
+    .then(response => {
+      if (response.ok) {
+        alert("Review submitted successfully");
+        console.log("Review submitted successfully");
+        // Optionally, redirect or perform other actions after successful review submission
+      } else {
+        alert("Failed to submit review");
+        console.error("Failed to submit review");
+      }
+    })
+    .catch(error => {
+      console.error("Network error:", error);
+    });
+});
+</script>
+
+</body>
+</html>
