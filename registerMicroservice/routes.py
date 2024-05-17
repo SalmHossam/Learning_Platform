@@ -67,7 +67,7 @@ try:
     connection = connect(
         host="localhost",
         user="root",
-        password="Salma@2001",
+        password="basoma-123",
         database="registermicroservice"
     )
     print("Connected to MySQL database!")
@@ -114,7 +114,7 @@ def login_user():
         connection = connect(
             host="localhost",
             user="root",
-            password="Salma@2001",
+            password="basoma-123",
             database="registermicroservice"
         )
         if not connection.is_connected():

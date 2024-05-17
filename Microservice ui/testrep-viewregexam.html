@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Registered Students</title>
+    <!-- Include Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-5">Exam Registered By Students</h1>
+        <table class="table mt-3">
+            <thead>
+                <tr>
+                    <th>Exam Name</th>
+                    <th>Email</th>
+                </tr>
+            </thead>
+            <tbody id="studentTableBody">
+                <!-- Student information will be inserted here dynamically -->
+            </tbody>
+        </table>
+
+        <div id="error" class="mt-3" style="display: none;">
+            <div class="alert alert-danger" role="alert">
+                Failed to fetch registered students.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // JavaScript code to fetch and display registered students
+        fetchRegisteredStudents();
+
+        function fetchRegisteredStudents() {
+            fetch('http://localhost:9090/testrepviewexamsreg')
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    document.getElementById('error').style.display = 'block';
+                } else {
+                    renderStudentTable(data);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('error').style.display = 'block';
+            });
+        }
+
+        function renderStudentTable(students) {
+            const tableBody = document.getElementById('studentTableBody');
+            tableBody.innerHTML = '';
+
+            students.forEach(student => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${student.exam_name}</td>
+                    <td>${student.email}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+    </script>
+</body>
+</html>

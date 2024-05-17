@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fetch Exams</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+
+        .exam {
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #fff;
+        }
+
+        .exam h3 {
+            margin-top: 0;
+        }
+
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div id="examsList"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchExams();
+        });
+
+        function fetchExams() {
+            fetch('http://localhost:9060/studentviewexams')
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(errorInfo => {
+                        throw new Error(errorInfo.error || 'Failed to fetch exams');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                displayExams(data);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                displayError(error.message);
+            });
+        }
+
+        function displayExams(exams) {
+            const examsList = document.getElementById('examsList');
+
+            examsList.innerHTML = '';
+
+            exams.forEach(exam => {
+                const examDiv = document.createElement('div');
+                examDiv.classList.add('exam');
+
+                const examName = document.createElement('h3');
+                examName.textContent = exam.name;
+
+                const examDetails = document.createElement('p');
+                examDetails.textContent = `Duration: ${exam.duration}, Available Dates: ${exam.dates.available_dates.join(', ')}, Scheduled Dates: ${exam.dates.scheduled_dates.join(', ')}`;
+
+                examDiv.appendChild(examName);
+                examDiv.appendChild(examDetails);
+
+                examsList.appendChild(examDiv);
+            });
+        }
+
+        function displayError(message) {
+            const examsList = document.getElementById('examsList');
+            examsList.innerHTML = `<p class="error">Error: ${message}</p>`;
+        }
+    </script>
+</body>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Exam Grades</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input[type="text"], button {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        #grades {
+            margin-top: 20px;
+            text-align: left;
+            padding-left: 10px;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>View Exam Grades</h1>
+        <label for="exam_name">Enter Exam Name:</label>
+        <input type="text" id="exam_name" placeholder="Exam Name">
+        <button onclick="getGrades()">Get Grades</button>
+        <div id="grades"></div>
+    </div>
+    <script>
+        function getGrades() {
+            const exam_name = document.getElementById('exam_name').value;
+            fetch(`http://localhost:9090/view/${exam_name}/grades`)
+                .then(response => response.json())
+                .then(data => {
+                    const gradesDiv = document.getElementById('grades');
+                    gradesDiv.innerHTML = '';
+                    if ('error' in data) {
+                        gradesDiv.innerHTML = `<p>${data.error}</p>`;
+                    } else {
+                        const grades = data.grades;
+                        if (grades.length > 0) {
+                            const list = document.createElement('ul');
+                            grades.forEach(grade => {
+                                const listItem = document.createElement('li');
+                                listItem.textContent = `Email: ${grade.email}, Grade: ${grade.grade}`;
+                                list.appendChild(listItem);
+                            });
+                            gradesDiv.appendChild(list);
+                        } else {
+                            gradesDiv.innerHTML = '<p>No grades available for this exam.</p>';
+                        }
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+    </script>
+</body>
+</html>

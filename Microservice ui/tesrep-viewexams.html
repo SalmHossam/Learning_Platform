@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fetch Exams</title>
+    <style>
+        /* Add your CSS styling here */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .exam {
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            padding: 10px;
+        }
+
+        .exam h3 {
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="examsList"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchExams();
+        });
+
+        function fetchExams() {
+            fetch('http://localhost:9090/view-exams', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch exams');
+                }
+                return response.json();
+            })
+            .then(data => {
+                displayExams(data);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to fetch exams');
+            });
+        }
+
+        function displayExams(exams) {
+            const examsList = document.getElementById('examsList');
+
+            // Clear previous content
+            examsList.innerHTML = '';
+
+            // Loop through exams and create HTML elements
+            exams.forEach(exam => {
+                const examDiv = document.createElement('div');
+                examDiv.classList.add('exam');
+
+                const examName = document.createElement('h3');
+                examName.textContent = exam.name;
+
+                const examDetails = document.createElement('p');
+                examDetails.textContent = `Duration: ${exam.duration}, Available Dates: ${exam.dates.available_dates.join(', ')}, Scheduled Dates: ${exam.dates.scheduled_dates.join(', ')}`;
+
+                examDiv.appendChild(examName);
+                examDiv.appendChild(examDetails);
+
+                examsList.appendChild(examDiv);
+            });
+        }
+    </script>
+</body>
+</html>
