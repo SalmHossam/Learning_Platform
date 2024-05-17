@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manage User Accounts</title>
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #f4f4f4;
+  }
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+  h1, h3 {
+    text-align: center;
+  }
+  .user {
+    margin-bottom: 20px;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+  .user-info {
+    margin-top: 10px;
+  }
+  .manage-buttons {
+    margin-top: 20px;
+    text-align: center;
+  }
+  .edit-button, .delete-button {
+    padding: 10px 20px;
+    margin: 0 5px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .edit-button:hover, .delete-button:hover {
+    background-color: #0056b3;
+  }
+  .message {
+    text-align: center;
+    margin-top: 20px;
+    color: red;
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>Manage User Accounts</h1>
+    
+    <div class="user-list" id="userList">
+      <!-- User rows will be dynamically added here -->
+    </div>
+    <div class="message" id="message"></div>
+  </div>
+
+  <!-- Edit User Modal -->
+<div class="modal fade" id="editUserModal" tabindex="-1" role="dialog" aria-labelledby="editUserModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+      <div class="modal-content">
+          <div class="modal-header">
+              <h5 class="modal-title" id="editUserModalLabel">Edit User</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+              </button>
+          </div>
+          <div class="modal-body">
+              <form id="editUserForm">
+                  <div class="form-group">
+                      <label for="editName">Name</label>
+                      <input type="text" class="form-control" id="editName" required>
+                  </div>
+                  <div class="form-group">
+                      <label for="editEmail">Email</label>
+                      <input type="email" class="form-control" id="editEmail" required>
+                  </div>
+                  <div class="form-group">
+                      <label for="editRole">Role</label>
+                      <input type="text" class="form-control" id="editRole" required>
+                  </div>
+                  <div class="form-group">
+                      <label for="editPassword">Password</label>
+                      <input type="password" class="form-control" id="editPassword" required>
+                  </div>
+              </form>
+          </div>
+          <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+              <button type="button" class="btn btn-primary" onclick="saveUser()">Save changes</button>
+          </div>
+      </div>
+  </div>
+</div>
+  <script>
+    // Function to fetch users and populate the HTML
+    function fetchUsers() {
+    console.log('Fetching user data...');
+    fetch('http://localhost:5000/All-Users')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to fetch user data');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('User data retrieved:', data);
+            const userListDiv = document.getElementById('userList');
+            userListDiv.innerHTML = ''; // Clear any existing content
+            if (data.Users && data.Users.length > 0) {
+                data.Users.forEach(user => {
+                    const userDiv = document.createElement('div');
+                    userDiv.classList.add('user');
+                    userDiv.id = `user-${user.userId}`;
+                    userDiv.innerHTML = `
+                        <h3>User ID: <span class="user-id">${user.id}</span></h3>
+                        <h3>Name: <span class="user-name">${user.name}</span></h3>
+                        <div class="user-info">
+                            <p>Email: <span class="user-email">${user.email}</span></p>
+                            <p>Role: <span class="user-role">${user.role}</span></p>
+                        </div>
+                        <div class="manage-buttons">
+                            <button class="edit-button" onclick="openModalEdit('${user.email}', '${user.name}', '${user.role}', '${user.userId}')">Edit</button>
+                            <button class="delete-button" onclick="confirmDelete('${user.email}', '${user.userId}')">Delete</button>
+                        </div>
+                    `;
+                    userListDiv.appendChild(userDiv);
+                });
+            } else {
+                console.log('No users found');
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching users:', error);
+        });
+}
+
+
+
+
+    // Function to open the modal for editing a user
+    let currentEditUserEmail = null;
+    function openModalEdit(email, name, role, userId) {
+    currentEditUserEmail = email;
+    currentEditUserId = userId; // Store the current user ID
+    document.getElementById('editName').value = name;
+    document.getElementById('editEmail').value = email;
+    document.getElementById('editRole').value = role;
+    $('#editUserModal').modal('show');
+}
+
+
+    // Function to save the edited user
+    function saveUser() {
+        const name = document.getElementById('editName').value;
+        const email = document.getElementById('editEmail').value; // This might be changed in the modal
+        const role = document.getElementById('editRole').value;
+
+        const updates = {
+            password: document.getElementById('editPassword').value, // Get the password from the input field
+            name: name,
+            role: role
+        };
+
+        fetch('http://localhost:5000/users/update', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                email: currentEditUserEmail,
+                updates: updates
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => { throw err; });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.message) {
+                // User updated successfully, update the UI
+                fetchUsers();
+                $('#editUserModal').modal('hide');
+                showMessage(data.message, 'success');
+            } else {
+                showMessage(data.error, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error updating user:', error);
+            showMessage(error.error || 'Error updating user', 'error');
+        });
+    }
+
+    // Function to delete a user
+    function deleteUser(email, password) {
+        fetch('http://localhost:5000/users/delete', {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                email: email,
+                password: password
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.message) {
+                // User deleted successfully, remove the user from the UI
+                const userDiv = document.getElementById(`user-${email}`);
+                if (userDiv) {
+                    userDiv.remove();
+                }
+                showMessage(data.message, 'success');
+            } else {
+                showMessage(data.error, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting user:', error);
+            showMessage('Error deleting user', 'error');
+        });
+    }
+    // Function to prompt for password for user deletion
+    function confirmDelete(email) {
+        const userPassword = prompt(`Enter the password for user ${email} to confirm deletion:`);
+
+        if (userPassword) {
+            deleteUser(email, userPassword);
+        } else {
+            showMessage('Deletion cancelled.', 'error');
+        }
+    }
+
+    // Function to delete a user
+    function deleteUser(email, password) {
+        fetch('http://localhost:5000/users/delete', {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                email: email,
+                password: password
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.message) {
+                // User deleted successfully, remove the user from the UI
+                const userDiv = document.getElementById(`user-${email}`);
+                if (userDiv) {
+                    userDiv.remove();
+                }
+                showMessage(data.message, 'success');
+            } else {
+                showMessage(data.error, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting user:', error);
+            showMessage('Error deleting user', 'error');
+        });
+    }
+
+    // Function to show messages
+    function showMessage(message, type) {
+        const messageDiv = document.getElementById('message');
+        messageDiv.textContent = message;
+        messageDiv.style.color = type === 'success' ? 'green' : 'red';
+        setTimeout(() => {
+            messageDiv.textContent = '';
+        }, 3000);
+    }
+
+    // Call fetchUsers function when the page loads
+    window.onload = fetchUsers;
+  </script>
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
