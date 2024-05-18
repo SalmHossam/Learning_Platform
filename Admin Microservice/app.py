@@ -2,24 +2,29 @@ from flask import Flask, request, jsonify
 import mysql.connector
 import random
 import string
-import bcrypt
-
+from flask_cors import CORS
+import random
+import string
 app = Flask(__name__)
+CORS(app) 
 
-# Function to generate a random password
-def generate_password(length=8):
-    characters = string.ascii_letters + string.digits
-    return ''.join(random.choice(characters) for i in range(length))
+
 
 # Database connection pool
 db = mysql.connector.connect(
     host="localhost",
     user="root",
-    passwd="basoma-123",
+    passwd="Salma@2001",
     database="admin_service"
 )
 
+
 # Endpoint to create accounts for test center representatives
+def generate_password(length=8):
+    characters = string.ascii_letters + string.digits
+    return ''.join(random.choice(characters) for _ in range(length))
+
+
 @app.route('/create_account', methods=['POST'])
 def create_account():
     data = request.json
@@ -29,17 +34,25 @@ def create_account():
         return jsonify({'error': 'No center names provided.'}), 400
 
     cursor = db.cursor()
-    accounts = []
+    response_string = ''
 
     try:
         for center_name in center_names:
-            password = generate_password()
-            hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-            accounts.append({'center_name': center_name, 'password': password})
+            # Check if the center name already exists in the database
+            cursor.execute("SELECT center_name FROM test_center_accounts WHERE center_name = %s", (center_name,))
+            existing_center = cursor.fetchone()
 
-            # Insert account into the database
-            cursor.execute("INSERT INTO test_center_accounts (center_name, password) VALUES (%s, %s)", (center_name, hashed_password.decode('utf-8')))
-            db.commit()
+            if existing_center:
+                # If the center name already exists, append an error message to the response string
+                response_string += f"Sorry, '{center_name}' already exists. "
+            else:
+                # Otherwise, proceed with creating the account
+                password = generate_password()
+                response_string += f"Center Name: {center_name}, Password: {password}\n"
+
+                # Insert account into the database
+                cursor.execute("INSERT INTO test_center_accounts (center_name, password) VALUES (%s, %s)", (center_name, password))
+                db.commit()
 
     except Exception as e:
         db.rollback()
@@ -48,33 +61,42 @@ def create_account():
     finally:
         cursor.close()
 
-    return jsonify({'accounts': accounts}), 201
+    return response_string, 201
 
-@app.route('/authenticate', methods=['POST'])
-def authenticate():
-    auth = request.json
-    username = auth.get('username')
-    password = auth.get('password')
-
-    if not username or not password:
-        return jsonify({"error": "Username and password are required"}), 400
-
-    cursor = db.cursor(dictionary=True)
-
+# Function to authenticate user
+def authenticate_user(username, password):
     try:
-        cursor.execute("SELECT password FROM test_center_accounts WHERE center_name = %s", (username,))
-        account = cursor.fetchone()
+        cursor = db.cursor(dictionary=True)
+        cursor.execute("SELECT COUNT(*) AS count FROM test_center_accounts WHERE center_name = %s AND password = %s", (username, password))
+        result = cursor.fetchone()
 
-        if account and bcrypt.checkpw(password.encode('utf-8'), account['password'].encode('utf-8')):
-            return jsonify({"message": "Authentication successful"}), 200
+        if result and result['count'] > 0:
+            return True
         else:
-            return jsonify({"error": "Invalid username or password"}), 401
+            return False
 
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+    except mysql.connector.Error as err:
+        print("MySQL error:", err)
+        return False
 
     finally:
-        cursor.close()
+        if 'cursor' in locals() and cursor:
+            cursor.close()
+# Route for authentication
+@app.route('/authenticate', methods=['POST'])
+def authenticate():
+    data = request.json
+    username = data.get('username')
+    password = data.get('password')
+
+    if not username or not password:
+        return jsonify({'error': 'Username and password are required.'}), 400
+
+    if authenticate_user(username, password):
+        return jsonify({'message': 'Authentication successful.'}), 200
+    else:
+        return jsonify({'error': 'Invalid username or password.'}), 401
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=9070)

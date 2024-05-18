@@ -1,28 +1,23 @@
 import logging
 from multiprocessing import connection
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import mysql.connector
-import requests
 import requests
 from flask import Flask, jsonify, request
 app = Flask(__name__)
-
+CORS(app)
 # MySQL Database Connection
 db = mysql.connector.connect(
     host="localhost",
-    user="username",
-    password="basoma-123",
+    user="root",
+    password="Salma@2001",
     database="exam_microservice"
 )
 cursor = db.cursor()
 
-
-import requests
-from flask import jsonify, request
-
-
 # Endpoint to fetch exams from testrep microservice
-@app.route('/exams', methods=['GET'])
+@app.route('/studentviewexams', methods=['GET'])  #done
 def fetch_exams():
     try:
         response = requests.get('http://localhost:9090/view-exams')
@@ -36,77 +31,28 @@ def fetch_exams():
 
 
 
-    # Assuming location coordinates are provided as query parameters
-    latitude = float(request.args.get('latitude'))
-    longitude = float(request.args.get('longitude'))
-    
-    # Assuming max distance in km is provided as a query parameter
-    max_distance = float(request.args.get('max_distance', 10))  # Default max distance is 10 km
 
-    # Filter test centers that are within the specified distance
-    nearby_centers = []
-    for center in test_centers:
-        center_location = (center['latitude'], center['longitude'])
-        distance = geodesic((latitude, longitude), center_location).kilometers
-        if distance <= max_distance:
-            nearby_centers.append(center)
-
-    return jsonify(nearby_centers)
-
-
-# Endpoint to register for an exam
-
-# @app.route('/register_exam', methods=['POST'])
-# def register_exam():
-    data = request.json
-    center_id = data['center_id']
-    exam_id = data['exam_id']  # Assuming the exam_id is provided in the request
-    exam_name = data['exam_name']  # Assuming the exam_id is provided in the request
-    date = data['date']
-    time = data['time']
-
-    # Data to be sent in the POST request to register-exam endpoint
-    exam_registration_data = {
-        'center_id': center_id,
-        'date': date,
-        'time': time,
-        'exam_id': exam_id
-    }
-
-    try:
-        # Send POST request to register-exam endpoint of testrepmicroservice
-        response = requests.post('http://testrepmicroservice/register-exam', json=exam_registration_data)
-        if response.status_code == 200:
-            return jsonify({"message": "Exam registered successfully"})
-        else:
-            return jsonify({"error": "Failed to register exam"})
-    except Exception as e:
-        return jsonify({"error": f"Error: {str(e)}"})
-# Create a cursor object
-cursor = db.cursor()
-import requests
-
-@app.route('/book-exam', methods=['POST'])
+@app.route('/book-exam', methods=['POST'])  #done
 def register_exam():
     try:
         data = request.json
-        center_id = data['center_id']
-        exam_id = data['exam_id']
+        center_name= data['center_name']
         exam_name = data['exam_name']
+        email = data['email']
         date = data['date']
         time = data['time']
         
         # Execute the SQL statement to insert exam data into the database
         cursor.execute("""
-            INSERT INTO exams (center_id, exam_id, exam_name, date, time)
-            VALUES (%s, %s, %s, %s, %s)
-        """, (center_id, exam_id, exam_name, date, time))
+            INSERT INTO exams (center_name, exam_name,email ,date, time)
+            VALUES (%s, %s, %s, %s,%s)
+        """, (center_name, exam_name,email, date, time))
         db.commit()
 
         # Make an HTTP request to the testrep microservice to update the scheduled date
         testrep_response = requests.put(
             'http://localhost:9090/update-scheduled-date',
-            json={'exam_id': exam_id, 'scheduled_date': date}
+            json={'exam_name': exam_name, 'scheduled_date': date}
         )
 
         if testrep_response.status_code == 200:
@@ -119,26 +65,15 @@ def register_exam():
         return jsonify({'error': str(e)}), 500
 
 
-
-
-# Close cursor and database connection when the Flask app shuts down
-@app.teardown_appcontext
-def close_connection(exception):
-    cursor.close()
-    db.close()
-
-import requests
-
-
-@app.route('/view_grades/<int:student_id>', methods=['GET'])
-def view_grades(student_id):
+@app.route('/view_grades/<email>', methods=['GET'])  #done
+def view_grades(email):
     try:
-        # Make a GET request to the testrep microservice to fetch grades for the student
-        response = requests.get(f'http://localhost:9090/grades/{student_id}')
+        # Make a GET request to the get_grades_for_student endpoint to fetch grades for the student
+        response = requests.get(f'http://localhost:9090/view-student-grades/{email}')
 
         # Check if the request was successful
         if response.status_code == 200:
-            # Parse the JSON response from the testrep microservice
+            # Parse the JSON response from the get_grades_for_student endpoint
             grades = response.json()
             return jsonify({'grades': grades}), 200
         else:
@@ -149,7 +84,77 @@ def view_grades(student_id):
         return jsonify({'error': f'Error occurred while fetching grades: {str(e)}'}), 500
 
 
+def search_nearby_test_centers(latitude, longitude):
+    # Define the URL of the test_centers/nearby endpoint
+    url = 'http://localhost:9090/test_centers/nearby'
+    
+    # Define the query parameters
+    params = {
+        'lat': latitude,
+        'lon': longitude
+    }
+    
+    # Send a GET request to the endpoint
+    response = requests.get(url, params=params)
+    
+    # Check if the request was successful (status code 200)
+    if response.status_code == 200:
+        # Return the JSON response
+        return response.json()
+    else:
+        # If the request was not successful, print an error message
+        print("Error: Unable to fetch nearby test centers.")
+        return None
+
+@app.route('/student/search_nearby_test_centers', methods=['GET'])
+def student_search_nearby_test_centers():
+    latitude_str = request.args.get('lat')
+    longitude_str = request.args.get('lon')
+
+    if latitude_str is None or longitude_str is None:
+        return jsonify({'error': 'Latitude and longitude parameters are required.'}), 400
+
+    try:
+        latitude = float(latitude_str)
+        longitude = float(longitude_str)
+    except ValueError:
+        return jsonify({'error': 'Latitude and longitude must be numeric values.'}), 400
+
+    # Call the function to search for nearby test centers
+    result = search_nearby_test_centers(latitude, longitude)
+
+    # Return the result as JSON response
+    return jsonify(result)
+
+
+@app.route('/view-registered-std', methods=['GET'])  #for the other service
+def get_exam_info():
+    cursor = db.cursor()
+    try:
+        cursor.execute("SELECT exam_name , email FROM exams")
+        exam_info = cursor.fetchall()
+
+        result = []
+        for row in exam_info:
+            result.append({
+                'exam_name': row[0],
+                'email': row[1]
+            })
+
+        return jsonify(result), 200
+    except mysql.connector.Error as e:
+        return jsonify({'error': f'Database error: {str(e)}'}), 500
+    finally:
+        cursor.close()
+
+
+# Close cursor and database connection when the Flask app shuts down
+@app.teardown_appcontext
+def close_connection(exception):
+    cursor.close()
+    db.close()
+
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True , port=9060)

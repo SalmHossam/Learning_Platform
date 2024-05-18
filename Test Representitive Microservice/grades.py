@@ -8,7 +8,7 @@ def query_grades_from_database(student_id):
         db_connection = mysql.connector.connect(
             host="localhost",
             user="root",
-            password="basoma-123",
+            password="Salma@2001",
             database="testrep_microservice"
         )
 
