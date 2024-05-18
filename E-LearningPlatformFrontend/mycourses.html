@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Dashboard</title>
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <a class="navbar-brand" href="#">Student Dashboard</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav mr-auto">
+        <!-- Add your navigation links here -->
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="container mt-5">
+    <h2>My Courses</h2>
+    
+    <!-- Current Enrollments -->
+    <h3>Current Enrollments</h3>
+    <ul class="list-group" id="currentEnrollments">
+      <!-- Current enrollment items will be dynamically added here -->
+    </ul>
+
+    <!-- Past Enrollments -->
+    <h3 class="mt-4">Past Enrollments</h3>
+    <ul class="list-group" id="pastEnrollments">
+      <!-- Past enrollment items will be dynamically added here -->
+    </ul>
+  </div>
+
+  <!-- Bootstrap JS (Optional for Dropdowns, Modals, etc.) -->
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+  <!-- JavaScript to fetch and display enrollments -->
+  <script>
+   // Function to fetch course details by ID
+async function fetchCourseName(courseId) {
+  try {
+    const response = await fetch(`http://localhost:8080/onlineLearningSite-1.0-SNAPSHOT/api/courses/${courseId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    const data = await response.json();
+    return data.name ;
+  } catch (error) {
+    console.error('Error fetching course details:', error);
+    return 'Unknown Course';
+  }
+}
+
+// Function to fetch current and past enrollments for the student
+async function fetchEnrollments() {
+  // Retrieve the user's email from session storage
+  const userEmail = sessionStorage.getItem('studentEmail');
+
+  if (!userEmail) {
+    console.error('User email not found in session storage.');
+    return;
+  }
+
+  // Fetch current enrollments
+  fetch(`http://localhost:8080/onlineLearningSite-1.0-SNAPSHOT/api/enrollments/student/current/${encodeURIComponent(userEmail)}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+  .then(async response => {
+    const data = await response.json();
+    const currentEnrollments = document.getElementById('currentEnrollments');
+    data.forEach(async enrollment => {
+      const courseName = await fetchCourseName(enrollment.courseID);
+      const listItem = document.createElement('li');
+      listItem.classList.add('list-group-item');
+      listItem.textContent = `${courseName} (Current)`;
+      currentEnrollments.appendChild(listItem);
+    });
+  })
+  .catch(error => {
+    console.error('Error fetching current enrollments:', error);
+  });
+
+  // Fetch past enrollments
+  fetch(`http://localhost:8080/onlineLearningSite-1.0-SNAPSHOT/api/enrollments/student/past/${encodeURIComponent(userEmail)}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+  .then(async response => {
+    const data = await response.json();
+    const pastEnrollments = document.getElementById('pastEnrollments');
+    data.forEach(async enrollment => {
+      const courseName = await fetchCourseName(enrollment.courseID);
+      const listItem = document.createElement('li');
+      listItem.classList.add('list-group-item');
+      listItem.textContent = `${courseName} (Past)`;
+      pastEnrollments.appendChild(listItem);
+    });
+  })
+  .catch(error => {
+    console.error('Error fetching past enrollments:', error);
+  });
+}
+
+// Call fetchEnrollments function when the page loads
+window.onload = fetchEnrollments;
+
+  </script>
+  
+</body>
+</html>

@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>User Registration</title>
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+  }
+  .container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    height: 100vh;
+  }
+  .registration-form {
+    width: 400px;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+    margin-top: 50px; /* Adjust the top margin as needed */
+  }
+  .registration-form h2 {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  .registration-form label {
+    font-weight: bold;
+  }
+  .registration-form input[type="text"],
+  .registration-form input[type="email"],
+  .registration-form input[type="password"],
+  .registration-form textarea {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+  }
+  .registration-form button {
+    width: 100%;
+    padding: 10px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .registration-form button:hover {
+    background-color: #0056b3;
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <form class="registration-form" id="registrationForm">
+      <h2>User Registration</h2>
+      <label for="name">Name:</label><br>
+      <input type="text" id="name" name="name" required><br>
+
+      <label for="email">Email:</label><br>
+      <input type="email" id="email" name="email" required><br>
+
+      <label for="password">Password:</label><br>
+      <input type="password" id="password" name="password" required minlength="8"><br>
+
+      <label for="affiliation">Affiliation:</label><br>
+      <input type="text" id="affiliation" name="affiliation"><br>
+
+      <label for="yearsofExperience">Years of Experience:</label><br>
+      <input type="number" id="yearsofExperience" name="yearsofExperience" min="0"><br>
+      
+
+      <label for="bio">Bio:</label><br>
+      <textarea id="bio" name="bio" rows="4" cols="50"></textarea><br>
+
+      <label for="role">Role:</label><br>
+      <select id="role" name="role">
+        <option value="admin">Admin</option>
+        <option value="instructor">Instructor</option>
+        <option value="student">Stundent</option>
+      </select><br>
+
+      <button type="button" onclick="registerUser()">Register</button>
+    </form>
+  </div>
+
+  <script>
+    function getUserRole(email) {
+  // Make a GET request to the endpoint to fetch user role
+  fetch(`http://localhost:5000/users/role?email=${email}`)
+    .then(response => {
+      if (response.ok) {
+        return response.json();
+      } else {
+        throw new Error('Failed to fetch user role');
+      }
+    })
+    .then(data => {
+      // Check if the response contains the role
+      if (data.role) {
+        console.log(`User ${data.email} has role: ${data.role}`);
+        // You can handle the role here, such as redirecting to a specific page based on the role
+      } else {
+        console.error('Role not found in response');
+      }
+    })
+    .catch(error => {
+      console.error('Error fetching user role:', error);
+    });
+}
+function getUserRole(email) {
+    // Make a GET request to fetch the user role
+    fetch(`http://localhost:5000/users/role?email=${email}`)
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            } else {
+                throw new Error('Failed to fetch user role');
+            }
+        })
+        .then(data => {
+            // Check if the response contains the role
+            if (data.role) {
+                console.log(`User ${email} has role: ${data.role}`);
+                // Redirect user based on their role
+                redirectByRole(data.role);
+            } else {
+                console.error('Role not found in response');
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching user role:', error);
+        });
+}
+
+function redirectByRole(role) {
+    switch (role) {
+        case 'Student':
+            window.location.href = "student.html";
+            break;
+        case 'Instructor':
+            window.location.href = "instructor.html";
+            break;
+        case 'Admin':
+            window.location.href = "admin.html";
+            break;
+        default:
+            alert("Unknown role. Please contact support.");
+            console.error("Unknown role");
+            break;
+    }
+}
+
+  function registerUser() {
+  // Get form input values
+  var name = document.getElementById("name").value;
+  var email = document.getElementById("email").value;
+  var password = document.getElementById("password").value;
+  var affiliation = document.getElementById("affiliation").value;
+  var yearsofExperience = document.getElementById("yearsofExperience").value;
+  var bio = document.getElementById("bio").value;
+  var role = document.getElementById("role").value;
+
+  // Construct the request body as JSON
+  var requestBody = JSON.stringify({
+    name: name,
+    email: email,
+    password: password,
+    affiliation: affiliation,
+    yearsofExperience: yearsofExperience,
+    bio: bio,
+    role: role
+  });
+
+  // Make a POST request to the backend registration endpoint
+  fetch('http://localhost:5000/users/register', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: requestBody
+  })
+  .then(response => {
+    // Handle the response from the server
+    if (response.ok) {
+      // Registration successful
+      alert("Registration successful");
+      console.log("Registration successful");
+      
+      // Retrieve user information to determine role
+      getUserRole(email);
+      // Redirect or show a success message
+    } else {
+      // Registration failed
+      alert("Registration failed");
+      console.error("Registration failed");
+      // Handle errors or show a failure message
+    }
+  })
+}
+
+  </script>
+</body>
+</html>

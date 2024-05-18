@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Student Grades</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input[type="text"], button {
+            width: calc(100% - 20px); /* Adjusted width to account for padding */
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            margin-left: 10px; /* Added margin for spacing */
+        }
+
+        #grades {
+            margin-top: 20px;
+            text-align: left;
+            padding-left: 10px; /* Adjusted padding for list items */
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>View Student Grades</h1>
+        <div id="grades"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const email = prompt('Enter student email to view grades:');
+            if (!email) {
+                alert('Email is required.');
+                window.location.href = '/'; // Redirect to home page if email is not provided
+            }
+
+            fetch(`http://localhost:9090/view-student-grades/${email}`)
+                .then(response => response.json())
+                .then(data => {
+                    const gradesDiv = document.getElementById('grades');
+                    gradesDiv.innerHTML = '';
+                    if ('error' in data) {
+                        gradesDiv.innerHTML = `<p>${data.error}</p>`;
+                    } else {
+                        const grades = data.grades;
+                        if (grades.length > 0) {
+                            const list = document.createElement('ul');
+                            grades.forEach(grade => {
+                                const listItem = document.createElement('li');
+                                listItem.textContent = `Exam: ${grade.exam_name}, Grade: ${grade.grade}`;
+                                list.appendChild(listItem);
+                            });
+                            gradesDiv.appendChild(list);
+                        } else {
+                            gradesDiv.innerHTML = '<p>No grades available for this student.</p>';
+                        }
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Instructor Enrollment Page</title>
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+<style>
+  .enrollment {
+    border: 1px solid #ccc;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+  }
+  .buttons {
+    margin-top: 10px;
+  }
+  .accept-button, .reject-button {
+    margin-right: 10px;
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>Instructor Enrollment Page</h1>
+    <!-- Enrolled students will be dynamically added here -->
+    <div id="enrolledStudents"></div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      fetchEnrolledStudents();
+    });
+
+    function fetchEnrolledStudents() {
+      const instructorEmail = sessionStorage.getItem('instructorEmail');
+
+      if (!instructorEmail) {
+        console.error('Instructor email not found in session storage.');
+        alert('Instructor email not found. Please log in again.');
+        window.location.href = 'login.html'; // Redirect to login page
+        return;
+      }
+
+      fetch(`http://localhost:8080/onlineLearningSite-1.0-SNAPSHOT/api/enrollments/instructor/${encodeURIComponent(instructorEmail)}`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`Server error: ${response.status} ${response.statusText}`);
+          }
+          return response.json().catch(() => {
+            throw new Error('Invalid JSON response');
+          });
+        })
+        .then(data => {
+          displayEnrolledStudents(data);
+        })
+        .catch(error => {
+          console.error('Error fetching enrolled students:', error);
+          alert('Failed to fetch enrolled students. Please try again later.');
+        });
+    }
+
+    function displayEnrolledStudents(enrolledStudents) {
+      const enrolledStudentsDiv = document.getElementById('enrolledStudents');
+      enrolledStudentsDiv.innerHTML = ''; // Clear any existing content
+
+      enrolledStudents.forEach(student => {
+        const enrollmentDiv = document.createElement('div');
+        enrollmentDiv.classList.add('enrollment');
+
+        const studentName = document.createElement('h2');
+        studentName.textContent = student.studentName;
+        enrollmentDiv.appendChild(studentName);
+
+        const courseInfo = document.createElement('p');
+        courseInfo.textContent = `Course: ${student.courseName}`;
+        enrollmentDiv.appendChild(courseInfo);
+
+        const emailInfo = document.createElement('p');
+        emailInfo.textContent = `Email: ${student.studentEmail}`;
+        enrollmentDiv.appendChild(emailInfo);
+
+        const buttonsDiv = document.createElement('div');
+        buttonsDiv.classList.add('buttons');
+
+        const acceptButton = document.createElement('button');
+        acceptButton.classList.add('accept-button', 'btn', 'btn-success');
+        acceptButton.textContent = 'Accept';
+        acceptButton.dataset.enrollmentId = student.enrollmentID;
+        acceptButton.addEventListener('click', function() {
+          approveEnrollment(student.enrollmentID);
+        });
+        buttonsDiv.appendChild(acceptButton);
+
+        const rejectButton = document.createElement('button');
+        rejectButton.classList.add('reject-button', 'btn', 'btn-danger');
+        rejectButton.textContent = 'Reject';
+        rejectButton.dataset.enrollmentId = student.enrollmentID;
+        rejectButton.addEventListener('click', function() {
+          rejectEnrollment(student.enrollmentID);
+        });
+        buttonsDiv.appendChild(rejectButton);
+
+        enrollmentDiv.appendChild(buttonsDiv);
+        enrolledStudentsDiv.appendChild(enrollmentDiv);
+      });
+    }
+
+    function approveEnrollment(enrollmentId) {
+  fetch(`http://localhost:8080/onlineLearningSite-1.0-SNAPSHOT/api/enrollments/${enrollmentId}/approve`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+  .then(response => {
+    if (response.ok) {
+      alert('Enrollment approved successfully');
+      console.log('Enrollment approved successfully');
+      fetchEnrolledStudents(); // Refresh the list of enrolled students
+    } else {
+      alert('Faild to approve enrollement');
+      throw new Error('Failed to approve enrollment');
+    }
+  })
+  .catch(error => {
+    console.error('Error approving enrollment:', error);
+    alert('Failed to approve enrollment. Please try again later.');
+  });
+}
+
+function rejectEnrollment(enrollmentId) {
+  fetch(`http://localhost:8080/onlineLearningSite-1.0-SNAPSHOT/api/enrollments/${enrollmentId}/reject`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+  .then(response => {
+    if (response.ok) {
+      alert('Enrollment rejected successfully');
+      console.log('Enrollment rejected successfully');
+      fetchEnrolledStudents(); // Refresh the list of enrolled students
+    } else {
+      throw new Error('Failed to reject enrollment');
+    }
+  })
+  .catch(error => {
+    console.error('Error rejecting enrollment:', error);
+    alert('Failed to reject enrollment. Please try again later.');
+  });
+
+    }
+  </script>
+</body>
+</html>

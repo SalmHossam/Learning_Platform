@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Home Page</title>
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #f4f4f4;
+  }
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+  h1, h2 {
+    text-align: center;
+  }
+  .course {
+    margin-bottom: 20px;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+  .course h3 {
+    margin-top: 0;
+  }
+  .buttons {
+    text-align: center;
+  }
+  .review-button, .edit-button, .remove-button {
+    padding: 10px 20px;
+    margin: 0 5px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .review-button:hover, .edit-button:hover, .remove-button:hover {
+    background-color: #0056b3;
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>Welcome Admin</h1>
+    <div id="coursesContainer">
+      <!-- Courses will be dynamically added here -->
+    </div>
+  </div>
+
+  <!-- Edit Course Form -->
+  <div id="editCourseForm" style="display: none;">
+    <h2>Edit Course</h2>
+    <form onsubmit="event.preventDefault(); updateCourse(document.getElementById('editCourseId').value);">
+      <input type="hidden" id="editCourseId">
+      <div class="form-group">
+        <label for="editName">Name:</label>
+        <input type="text" class="form-control" id="editName" required>
+      </div>
+      <div class="form-group">
+        <label for="editCategory">Category:</label>
+        <input type="text" class="form-control" id="editCategory" required>
+      </div>
+      <div class="form-group">
+        <label for="editRating">Rating:</label>
+        <input type="number" class="form-control" id="editRating" step="0.1" min="0" max="5" required>
+      </div>
+      <div class="form-group">
+        <label for="editCapacity">Capacity:</label>
+        <input type="number" class="form-control" id="editCapacity" min="0" required>
+      </div>
+      <div class="form-group">
+        <label for="editEmail">Instructor Email:</label>
+        <input type="email" class="form-control" id="editEmail" required>
+      </div>
+      <button type="submit" class="btn btn-primary">Update</button>
+      <button type="button" class="btn btn-secondary" onclick="cancelEdit()">Cancel</button>
+    </form>
+  </div>
+
+<!-- Edit Course Modal -->
+<div id="editCourseModal" class="modal" style="display: none;">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">Edit Course</h4>
+        <button type="button" class="close" onclick="cancelEdit()">
+          <span>&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="editCourseForm" onsubmit="event.preventDefault(); updateCourse()">
+          <input type="hidden" id="editCourseId">
+          <div class="form-group">
+            <label for="editName">Name:</label>
+            <input type="text" class="form-control" id="editName" required>
+          </div>
+          <div class="form-group">
+            <label for="editCategory">Category:</label>
+            <input type="text" class="form-control" id="editCategory" required>
+          </div>
+          <div class="form-group">
+            <label for="editRating">Rating:</label>
+            <input type="number" class="form-control" id="editRating" step="0.1" min="0" max="5" required>
+          </div>
+          <div class="form-group">
+            <label for="editCapacity">Capacity:</label>
+            <input type="number" class="form-control" id="editCapacity" min="0" required>
+          </div>
+          <div class="form-group">
+            <label for="editEmail">Instructor Email:</label>
+            <input type="email" class="form-control" id="editEmail" required>
+          </div>
+          <button type="submit" class="btn btn-primary">Update</button>
+          <button type="button" class="btn btn-secondary" onclick="cancelEdit()">Cancel</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Function to retrieve and display courses
+  function retrieveCourses() {
+    // AJAX request to fetch courses from backend
+    fetch('http://localhost:8080/onlineLearningSite-1.0-SNAPSHOT/api/courses/AllCourses', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    })
+    .then(response => response.json())
+    .then(courses => {
+      // Clear existing courses
+      document.getElementById('coursesContainer').innerHTML = '';
+      
+      // Loop through the retrieved courses and create HTML elements
+      courses.forEach(course => {
+        const courseElement = document.createElement('div');
+        courseElement.classList.add('course');
+        courseElement.innerHTML = `
+          <h2>${course.name}</h2>
+          <p>Description: ${course.description}</p>
+          <p>Instructor: ${course.instructorEmail}</p>
+          <div class="buttons">
+            <button class="review-button" onclick="navigateToReview(${course.courseID})">Review Course</button>
+            <button class="edit-button" onclick="openEditModal(${course.courseID})">Edit Course</button>
+            <button class="remove-button" onclick="deleteCourse(${course.courseID})">Remove Course</button>
+          </div>
+        `;
+        document.getElementById('coursesContainer').appendChild(courseElement);
+      });
+    })
+    .catch(error => {
+      console.error('Error fetching courses:', error);
+    });
+  }
+
+  // Call retrieveCourses function when the page loads
+  window.onload = retrieveCourses;
+  function navigateToReview(courseId) {
+    window.location.href = `coursereview.html?courseId=${courseId}`;
+}
+
+  function openEditModal(courseId) {
+    // Store the ID of the course being edited
+    editingCourseId = courseId;
+    
+    // Get the existing course details displayed in the UI for editing
+    const courseNameElement = document.getElementById(`courseName_${courseId}`);
+    const courseName = courseNameElement ? courseNameElement.innerText : '';
+    
+    const courseCategoryElement = document.getElementById(`courseCategory_${courseId}`);
+    const courseCategory = courseCategoryElement ? courseCategoryElement.innerText : '';
+    
+    const courseRatingElement = document.getElementById(`courseRating_${courseId}`);
+    const courseRating = courseRatingElement ? parseFloat(courseRatingElement.innerText) : 0;
+    
+    const courseCapacityElement = document.getElementById(`courseCapacity_${courseId}`);
+    const courseCapacity = courseCapacityElement ? parseInt(courseCapacityElement.innerText) : 0;
+    
+    const courseInstructorEmailElement = document.getElementById(`courseInstructor_${courseId}`);
+    const courseInstructorEmail = courseInstructorEmailElement ? courseInstructorEmailElement.innerText : '';
+    
+    // Populate form with course details
+    document.getElementById('editCourseForm').style.display = 'block';
+    document.getElementById('editCourseId').value = courseId;
+    document.getElementById('editName').value = courseName;
+    document.getElementById('editCategory').value = courseCategory;
+    document.getElementById('editRating').value = courseRating;
+    document.getElementById('editCapacity').value = courseCapacity;
+    document.getElementById('editEmail').value = courseInstructorEmail;
+}
+
+function removeCourse(courseId) {
+  // AJAX request to delete course review first
+  fetch(`http://localhost:8080/onlineLearningSite-1.0-SNAPSHOT/api/courses/delete-course-review/${courseId}`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+  .then(response => {
+    if (response.ok) {
+      // Course review deleted successfully, now delete the course
+      deleteCourse(courseId);
+    } else {
+      alert('Failed to delete course review:', response.statusText);
+
+      console.error('Failed to delete course review:', response.statusText);
+    }
+  })
+  .catch(error => {
+    alert('Error deleting course review:', error);
+    console.error('Error deleting course review:', error);
+  });
+}
+
+function deleteCourse(courseId) {
+  // AJAX request to delete course
+  fetch(`http://localhost:8080/onlineLearningSite-1.0-SNAPSHOT/api/courses/delete-course/${courseId}`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+  .then(response => {
+    if (response.ok) {
+      // Remove the course element from UI
+      var courseElement = document.getElementById('course_' + courseId);
+      if (courseElement) {
+        courseElement.remove();
+        alert('Course deleted successfully');
+      } else {
+        console.error('Failed to find course element to delete');
+      }
+    } else {
+      alert('Failed to delete course');
+      console.error('Failed to delete course:', response.statusText);
+    }
+})
+
+}
+
+
+  function updateCourse() {
+    // Get updated values from the form
+    const updatedName = document.getElementById('editName').value;
+    const updatedCategory = document.getElementById('editCategory').value;
+    const updatedRating = parseFloat(document.getElementById('editRating').value);
+    const updatedCapacity = parseInt(document.getElementById('editCapacity').value);
+    const updatedEmail = document.getElementById('editEmail').value;
+
+    // AJAX request to update course
+    fetch(`http://localhost:8080/onlineLearningSite-1.0-SNAPSHOT/api/courses/update-course/${editingCourseId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        name: updatedName,
+        category: updatedCategory,
+        rating: updatedRating,
+        capacity: updatedCapacity,
+        instructorEmail: updatedEmail
+      })
+    })
+    .then(response => {
+      if (response.ok) {
+        // Update the UI or notify the user about the successful update
+        console.log('Course updated successfully');
+        alert('Course updated successfully');
+        // Hide the edit modal after successful update
+        document.getElementById('editCourseModal').style.display = 'none';
+        // Refresh the course list
+        retrieveCourses();
+      } else {
+        alert('Failed to update course');
+        console.error('Failed to update course:', response.statusText);
+      }
+    })
+    .catch(error => {
+      alert('Error updating course');
+      console.error('Error updating course:', error);
+    });
+  }
+
+  function cancelEdit() {
+    // Hide the edit modal when cancel button is clicked
+    document.getElementById('editCourseModal').style.display = 'none';
+  }
+</script>
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Enrollment</title>
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+ <!-- Main Content -->
+ <div class="container mt-5">
+  <h2>Student Enrollment</h2>
+  <div class="mt-4" id="enrollmentNotifications">
+    <!-- Display enrollment notifications here -->
+  </div>  
+  <!-- Enrollment Form -->
+  <div class="mt">
+    <form id="enrollment-form">
+      <div class="form-group">
+        <label for="name">Course Name:</label>
+        <input type="text" class="form-control" id="name" placeholder="Enter course name">
+      </div>
+      <div class="form-group">
+        <label for="studentEmail">Student Email:</label>
+        <input type="email" class="form-control" id="studentEmail" placeholder="Enter student email">
+      </div>
+      <button type="submit" class="btn btn-primary" id="enrollBtn">Enroll</button>
+      <button type="button" class="btn btn-danger" id="cancelEnrollmentBtn">Cancel Enrollment</button>
+    </form>
+  </div>
+  
+
+<!-- Bootstrap JS (Optional for Dropdowns, Modals, etc.) -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<!-- Custom JavaScript -->
+<script>
+  // Function to add new enrollment notification
+  function addNotification(message) {
+    var notificationsDiv = document.getElementById('enrollmentNotifications');
+    var notificationDiv = document.createElement('div');
+    notificationDiv.classList.add('alert', 'alert-success');
+    notificationDiv.innerHTML = message;
+    notificationsDiv.appendChild(notificationDiv);
+  }
+
+  // Handle enrollment
+  document.getElementById('enrollBtn').addEventListener('click', function() {
+    // Simulate enrollment process
+    addNotification('Enrolled successfully!');
+  });
+
+  // Handle cancel enrollment
+document.getElementById('cancelEnrollmentBtn').addEventListener('click', function() {
+    // Get student email
+    var studentEmail = document.getElementById('studentEmail').value;
+
+    // Make a DELETE request to cancel enrollment
+    fetch('http://localhost:8080/onlineLearningSite-1.0-SNAPSHOT/api/enrollments/cancel/' + studentEmail, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => {
+        if (response.ok) {
+            // Enrollment canceled successfully
+            addNotification('Enrollment canceled successfully!');
+        } else {
+            // Failed to cancel enrollment
+            console.error("Failed to cancel enrollment");
+            // Optionally, display an error message to the user
+        }
+    })
+    .catch(error => {
+        console.error("Network error:", error);
+        // Optionally, display an error message to the user
+    });
+});
+
+  // Handle form submission
+  document.querySelector('#enrollment-form').addEventListener('submit', function(event) {
+    event.preventDefault(); // Prevent the form from submitting normally
+
+    // Get form input values
+    var courseName = document.getElementById('name').value;
+    var studentEmail = document.getElementById('studentEmail').value;
+
+    // Construct the request body as JSON
+    var requestBody = JSON.stringify({
+      courseName: courseName, // Corrected attribute name
+      studentEmail: studentEmail // Corrected attribute name
+    });
+
+    // Make a POST request to the backend create enrollment endpoint
+    fetch('http://localhost:8080/onlineLearningSite-1.0-SNAPSHOT/api/enrollments/create', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: requestBody
+    })
+    .then(response => {
+      if (response.ok) {
+        alert("Enrolled successfully");
+        console.log("Enrolled successfully");
+        // Optionally, redirect or perform other actions after successful course creation
+      } else {
+        alert("Failed to enroll course");
+        console.error("Failed to enroll course");
+      }
+    })
+    .catch(error => {
+      console.error("Network error:", error);
+    });
+  });
+</script>
+
+</body>
+</html>
