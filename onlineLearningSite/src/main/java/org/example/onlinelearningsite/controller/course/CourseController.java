@@ -82,6 +82,32 @@ public class CourseController {
             return false;
         }
     }
+    public List<Course> getAllCourses() {
+        List<Course> courses = new ArrayList<>();
+        try (Connection connection = DriverManager.getConnection(JDBC_URL);
+             PreparedStatement statement = connection.prepareStatement("SELECT * FROM Courses");
+             ResultSet resultSet = statement.executeQuery()) {
+
+            while (resultSet.next()) {
+                Course course = new Course();
+                course.setCourseID(resultSet.getInt("courseID"));
+                course.setName(resultSet.getString("name"));
+                course.setDuration(resultSet.getInt("duration"));
+                course.setCategory(resultSet.getString("category"));
+                course.setInstructorEmail(resultSet.getString("instructorEmail"));
+                course.setRating(resultSet.getDouble("rating"));
+                course.setCapacity(resultSet.getInt("capacity"));
+                course.setEnrolledStudents(resultSet.getInt("enrolledStudents"));
+                course.setDescription(resultSet.getString("description"));
+                course.setCreatedAt(resultSet.getTimestamp("createdAt"));
+                course.setUpdatedAt(resultSet.getTimestamp("updatedAt"));
+                courses.add(course);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return courses;
+    }
 
 
     public List<Course> getCourses(String searchTerm, String searchCriteria) {
@@ -117,6 +143,7 @@ public class CourseController {
                         course.setName(resultSet.getString("name"));
                         course.setDuration(resultSet.getInt("duration"));
                         course.setCategory(resultSet.getString("category"));
+                        course.setInstructorEmail(resultSet.getString("instructorEmail"));
                         course.setRating(resultSet.getDouble("rating"));
                         course.setCapacity(resultSet.getInt("capacity"));
                         course.setEnrolledStudents(resultSet.getInt("enrolledStudents"));
@@ -173,7 +200,7 @@ public class CourseController {
                 statement.setString(2, updatedCategory);
                 statement.setDouble(3, updatedRating);
                 statement.setInt(4, updatedCapacity);
-                statement.setString(8, updatedEmail); // Use instructor's email
+                statement.setString(5, updatedEmail); // Use instructor's email
                 statement.setInt(6, courseId);
 
                 int rowsUpdated = statement.executeUpdate();

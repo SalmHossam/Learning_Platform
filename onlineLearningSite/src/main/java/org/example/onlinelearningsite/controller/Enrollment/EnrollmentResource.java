@@ -14,6 +14,16 @@ public class EnrollmentResource {
     @EJB
     private EnrollmentController enrollmentService;
 
+    @OPTIONS
+    @Path("{path: .*}")
+    public Response options() {
+        return Response.ok()
+                .header("Access-Control-Allow-Origin", "*")
+                .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+                .header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+                .build();
+    }
+
     @POST
     @Path("/create")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -28,29 +38,49 @@ public class EnrollmentResource {
     }
 
     @DELETE
-    @Path("/{enrollmentId}")
-    public Response cancelEnrollment(@PathParam("enrollmentId") Long enrollmentId) {
+    @Path("/cancel/{studentEmail}")
+    public Response cancelEnrollment(@PathParam("studentEmail") String studentEmail) {
         try {
-            enrollmentService.cancelEnrollment(enrollmentId);
+            enrollmentService.cancelEnrollment(studentEmail);
             return Response.ok("Enrollment canceled successfully").build();
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity("Failed to cancel enrollment: " + e.getMessage()).build();
         }
     }
+    @GET
+    @Path("/instructor/{instructorEmail}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getEnrollmentsForInstructor(@PathParam("instructorEmail") String instructorEmail) {
+        List<Enrollment> enrollments = enrollmentService.getEnrollmentsForInstructor(instructorEmail);
+        return Response.ok(enrollments).build();
+    }
 
     @GET
-    @Path("/student/{studentEmail}")
+    @Path("/student/current/{studentEmail}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getEnrollmentsForStudent(@PathParam("studentEmail") String studentEmail) {
+    public Response getCurrentEnrollmentsForStudent(@PathParam("studentEmail") String studentEmail) {
         try {
-            List<Enrollment> enrollments = enrollmentService.getEnrollmentsForStudent(studentEmail);
+            List<Enrollment> enrollments = enrollmentService.getCurrentEnrollmentsForStudent(studentEmail);
             return Response.ok(enrollments).build();
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity("Failed to retrieve enrollments for student: " + e.getMessage()).build();
+                    .entity("Failed to retrieve current enrollments for student: " + e.getMessage()).build();
         }
     }
+    @GET
+    @Path("/student/past/{studentEmail}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getPastEnrollmentsForStudent(@PathParam("studentEmail") String studentEmail) {
+        try {
+            List<Enrollment> enrollments = enrollmentService.getPastEnrollmentsForStudent(studentEmail);
+            return Response.ok(enrollments).build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("Failed to retrieve past enrollments for student: " + e.getMessage()).build();
+        }
+    }
+
 
     @PUT
     @Path("/{enrollmentId}/approve")

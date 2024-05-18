@@ -1,6 +1,7 @@
 package org.example.onlinelearningsite.controller.course;
 
 import org.example.onlinelearningsite.Entity.Course;
+import org.example.onlinelearningsite.controller.CourseReview.CourseReviewController;
 
 
 import javax.ejb.EJB;
@@ -14,6 +15,20 @@ public class CourseResource {
 
     @EJB
     private CourseController courseController;
+    @EJB
+    private CourseReviewController reviewController;
+
+    // Enable CORS for all methods in this resource
+    @OPTIONS
+    @Path("{path: .*}")
+    public Response options() {
+        return Response.ok()
+                .header("Access-Control-Allow-Origin", "*")
+                .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+                .header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+                .build();
+    }
+
 
     @POST
     @Path("/create")
@@ -42,11 +57,13 @@ public class CourseResource {
     @Path("/delete-course/{courseId}")
     public Response deleteCourse(@PathParam("courseId") int courseId) {
         boolean deletedCourse = courseController.deleteCourse(courseId);
+
         if (deletedCourse) {
             return Response.status(Response.Status.OK).entity("Course Deleted Successfully").build();
         } else {
-            return Response.status(Response.Status.NOT_FOUND).entity("Course not found").build();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Failed to delete course").build();
         }
+
     }
     @GET
     @Path("/search")
@@ -63,6 +80,21 @@ public class CourseResource {
             return Response.status(Response.Status.OK).entity(courses).build();
         }
     }
+    @GET
+    @Path("/AllCourses")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getAllCourses() {
+        List<Course> courses = courseController.getAllCourses();
+
+        if (courses != null && !courses.isEmpty()) {
+            // Return the list of courses as JSON with 200 OK status
+            return Response.ok(courses).build();
+        } else {
+            // If no courses found, return 404 Not Found
+            return Response.status(Response.Status.NOT_FOUND).entity("No courses found").build();
+        }
+    }
+
     @PUT
     @Path("/update-course/{courseId}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -85,6 +117,5 @@ public class CourseResource {
             return Response.status(Response.Status.NOT_FOUND).entity("Course not found").build();
         }
     }
-
 
 }

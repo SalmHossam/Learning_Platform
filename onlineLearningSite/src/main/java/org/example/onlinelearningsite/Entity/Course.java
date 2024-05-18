@@ -10,19 +10,19 @@ public class Course {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int courseID;
 
-    @Column(name="Name")
+    @Column(name = "Name")
     private String name;
-    @Column(name="Duration")
+    @Column(name = "Duration")
     private int duration;
-    @Column(name="Category")
+    @Column(name = "Category")
     private String category;
-    @Column(name="Rating")
+    @Column(name = "Rating")
     private double rating;
-    @Column(name="Capacity")
+    @Column(name = "Capacity")
     private int capacity;
-    @Column(name="EnrolledStudents")
+    @Column(name = "EnrolledStudents")
     private int enrolledStudents;
-    @Column(name="Description")
+    @Column(name = "Description")
     private String description;
 
     @Column(name = "InstructorEmail") // Changed from instructorID
@@ -35,7 +35,8 @@ public class Course {
     @Transient
     private String instructorName;
 
-    public Course() {}
+    public Course() {
+    }
 
     public Course(String token, String name, int duration, String category, double rating, int capacity, int enrolledStudents, String description, Date createdAt, Date updatedAt, String instructorEmail, String instructorName) {
         this.name = name;

@@ -24,6 +24,7 @@ public class Enrollment  {
 
     @Column(name = "CreatedAt")
     private Timestamp createdAt;
+    private String courseName;
 
     // Constructors
     public Enrollment() {
@@ -80,5 +81,12 @@ public class Enrollment  {
         this.createdAt = createdAt;
     }
 
+    public String getCourseName() {
+        return courseName;
+    }
+
+    public void setCourseName(String courseName) {
+        this.courseName = courseName;
+    }
 }
 
